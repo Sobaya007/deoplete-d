@@ -41,8 +41,8 @@ class Source(Base):
             'T': 'mixin template', # - mixin template name
         }
 
-        self._dcd_client_binary = self.vim.vars['deoplete#sources#d#dcd_client_binary']
-        self._dcd_server_binary = self.vim.vars['deoplete#sources#d#dcd_server_binary']
+        self._dcd_client_binary = os.path.expanduser(self.vim.vars['deoplete#sources#d#dcd_client_binary'])
+        self._dcd_server_binary = os.path.expanduser(self.vim.vars['deoplete#sources#d#dcd_server_binary'])
         self.import_dirs = []
 
         self
