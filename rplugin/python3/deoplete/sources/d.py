@@ -60,7 +60,8 @@ class Source(Base):
                                         start_new_session=True)
             stdout_data, stderr_data = process.communicate()
             if stderr_data != b'':
-                raise Exception((args, stderr_data.decode()))
+                return
+                #raise Exception((args, stderr_data.decode()))
             import_paths = stdout_data.decode().split('\n')
             self.import_dirs.append(import_paths);
 
@@ -100,7 +101,8 @@ class Source(Base):
         result = stdout_data.decode().split('\n')
 
         if stderr_data != b'':
-            raise Exception((args, stderr_data.decode()))
+            return []
+            #raise Exception((args, stderr_data.decode()))
 
         if result[0] == "identifiers":
             return self.identifiers_from_result(result)
