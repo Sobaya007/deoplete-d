@@ -43,7 +43,7 @@ class Source(Base):
 
         self._dcd_client_binary = os.path.expanduser(self.vim.vars['deoplete#sources#d#dcd_client_binary'])
         self._dcd_server_binary = os.path.expanduser(self.vim.vars['deoplete#sources#d#dcd_server_binary'])
-        self._dub_binary = os.path.expanduser(self.vi.vars['deoplete#sources#d#dub_binary'])
+        self._dub_binary = os.path.expanduser(self.vim.vars['deoplete#sources#d#dub_binary'])
         self.import_dirs = []
 
         self
@@ -53,7 +53,8 @@ class Source(Base):
             atexit.register(lambda: process.kill())
 
         if self.vim.vars['deoplete#sources#d#dub_import'] == 1 and self.dub_binary() is not None:
-            process = subprocess.Popen([self.dub_binary(), "describe", "--import-paths"],
+            args = [self.dub_binary(), "describe", "--import-paths"]
+            process = subprocess.Popen(args,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
                                         start_new_session=True)
