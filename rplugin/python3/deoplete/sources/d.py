@@ -53,10 +53,10 @@ class Source(Base):
             atexit.register(lambda: process.kill())
 
         if self.vim.vars['deoplete#sources#d#dub_import'] == 1 and self.dub_binary() is not None:
-                process = subprocess.Popen([self.dub_binary(), "describe", "--import-paths"])
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                start_new_session=True)
+            process = subprocess.Popen([self.dub_binary(), "describe", "--import-paths"],
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE,
+                                        start_new_session=True)
             stdout_data, stderr_data = process.communicate()
             if stderr_data != b'':
                 raise Exception((args, stderr_data.decode()))
