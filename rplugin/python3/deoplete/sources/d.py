@@ -43,6 +43,7 @@ class Source(Base):
 
         self._dcd_client_binary = os.path.expanduser(self.vim.vars['deoplete#sources#d#dcd_client_binary'])
         self._dcd_server_binary = os.path.expanduser(self.vim.vars['deoplete#sources#d#dcd_server_binary'])
+        self._dub_binary = os.path.expanduser(self.vi.vars['deoplete#sources#d#dub_binary'])
         self.import_dirs = []
 
         self
@@ -50,6 +51,17 @@ class Source(Base):
         if self.vim.vars['deoplete#sources#d#dcd_server_autostart'] == 1 and self.dcd_server_binary() is not None:
             process = subprocess.Popen([self.dcd_server_binary()])
             atexit.register(lambda: process.kill())
+
+        if self.vim.vars['deoplete#sources#d#dub_import'] == 1 and self.dub_binary() is not None:
+                process = subprocess.Popen([self.dub_binary(), "describe", "--import-paths"])
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                start_new_session=True)
+            stdout_data, stderr_data = process.communicate()
+            if stderr_data != b'':
+                raise Exception((args, stderr_data.decode()))
+            import_paths = stdout_data.decode().split('\n')
+            self.import_dirs.append(import_paths);
 
     def get_complete_position(self, context):
         m = re.search(r'\w*$', context['input'])
@@ -181,6 +193,15 @@ class Source(Base):
                 raise
         except Exception:
             return self.find_binary_path('dcd-server')
+
+    def dub_binary(self):
+        try:
+            if os.path.isfile(self._dub_binary):
+                return self._dub_binary
+            else:
+                raise
+        except Exception:
+            return self.find_binary_path('dub')
 
     def find_binary_path(self, cmd):
         def is_exec(fpath):
