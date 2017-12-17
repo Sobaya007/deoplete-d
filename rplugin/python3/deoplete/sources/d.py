@@ -49,7 +49,7 @@ class Source(Base):
         self
 
         if self.vim.vars['deoplete#sources#d#dcd_server_autostart'] == 1 and self.dcd_server_binary() is not None:
-            process = subprocess.Popen([self.dcd_server_binary()])
+            process = subprocess.Popen([self.dcd_server_binary()], start_new_session=True)
             atexit.register(lambda: process.kill())
 
         if self.vim.vars['deoplete#sources#d#dub_import'] == 1 and self.dub_binary() is not None:
@@ -59,9 +59,7 @@ class Source(Base):
                                         stderr=subprocess.PIPE,
                                         start_new_session=True)
             stdout_data, stderr_data = process.communicate()
-            if stderr_data != b'':
-                return
-                #raise Exception((args, stderr_data.decode()))
+            if stderr_data != b'': return
             import_paths = stdout_data.decode().split('\n')
             self.import_dirs.append(import_paths);
 
@@ -79,7 +77,7 @@ class Source(Base):
         offset += len(context['complete_str'])
         source = '\n'.join(buf).encode()
 
-        args = [self.dcd_client_binary(), "-c" + str(offset)]
+        args = [self.dcd_client_binary(), "-c" + str(offset), "--extended"]
 
         if buf.name != "":
             buf_path = os.path.dirname(buf.name);
@@ -90,6 +88,9 @@ class Source(Base):
             if not buf_path in self.import_dirs:
                 args.append("-I{}".format(buf_path))
                 self.import_dirs.append(buf_path)
+
+        for import_path in self.import_dirs:
+            args.append("-I{}".format(import_path))
 
         process = subprocess.Popen(args,
                                    stdin=subprocess.PIPE,
@@ -115,7 +116,7 @@ class Source(Base):
         out = []
         sep = ' '
 
-        candidates = []
+        candidates = {}
         longest_class_length = 0
         for complete in result[1:]:
             if complete.strip() == '':
@@ -129,18 +130,25 @@ class Source(Base):
             if pieces[1] == "*":
                 continue
 
-            candidates.append(pieces)
+            key = "\t".join(pieces[0:2])
+            _class = self.class_dict[pieces[1]]
+            value = pieces
+            if key in candidates:
+                candidates[key].append(value)
+            else:
+                candidates[key] = [value]
 
-            class_len = len(self.class_dict[pieces[1]])
+            class_len = len(_class)
 
             if class_len > longest_class_length:
                 longest_class_length = class_len
 
-        for pieces in candidates:
-            word = pieces[0]
-            _class = self.class_dict[pieces[1]]
+        for key, value in candidates.items():
+            po = key.split("\t")
+            word = po[0]
+            _class = self.class_dict[po[1]]
             abbr = _class.ljust(longest_class_length + 1) + word
-            info = _class
+            info = "\n".join(map(lambda v: ("[" + _class + "]").ljust(longest_class_length + 3) + v[2], value))
 
             candidate = dict(word=word,
                               abbr=abbr,
